@@ -21,4 +21,4 @@ jobs:
           nowPassword: ${{ secrets.NOWPASSWORD }}
           nowSourceInstance: ${{ secrets.NOWINSTALLINSTANCE }}
           appSysID: "0259766683094710103cba29feaad3c5"
-          appScope: "global"
+          appScope: "Global App"
