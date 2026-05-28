@@ -1,0 +1,24 @@
+name: Deploy to PDI-Test
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  deploy:
+    name: Apply Changes to Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger ServiceNow CI/CD API
+        uses: ServiceNow/sncicd-apply-changes@2.0.0
+        env:
+          nowUsername: ${{ secrets.NOWUSERNAME }}
+          nowPassword: ${{ secrets.NOWPASSWORD }}
+          nowSourceInstance: ${{ secrets.NOWINSTALLINSTANCE }}
+          appSysID: "0259766683094710103cba29feaad3c5"
+          appScope: "global"
