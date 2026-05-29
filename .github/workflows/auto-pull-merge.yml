@@ -1,29 +1,26 @@
-name: Auto Create and Merge PR
+name: 2 - Deploy Application to UAT
 
-# 1. Listen for pushes to ANY branch EXCEPT the main branch
+# Trigger ONLY when code successfully lands in the main branch
 on:
   push:
-    branches-ignore:
-      - main 
-
-# 2. Give the robot permission to edit code and PRs
-permissions:
-  contents: write
-  pull-requests: write
+    branches:
+      - main
+  workflow_dispatch: # Allows you to trigger a manual deployment
 
 jobs:
-  create-and-merge-pr:
+  deploy-to-test:
+    name: Apply Changes to Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Auto-Create and Auto-Merge
+      - name: Trigger ServiceNow CI/CD API
+        uses: ServiceNow/sncicd-apply-changes@2.0.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Step A: Use the GitHub CLI to automatically create the Pull Request
-          gh pr create --base main --head ${{ github.ref_name }} --title "Automated PR: ${{ github.ref_name }}" --body "This PR was automatically created and merged from ServiceNow."
-          
-          # Step B: Instantly merge that Pull Request into main
-          gh pr merge ${{ github.ref_name }} --merge --delete-branch
+          nowUsername: ${{ secrets.NOWUSERNAME }}
+          nowPassword: ${{ secrets.NOWPASSWORD }}
+          nowInstallInstance: ${{ secrets.NOWINSTALLINSTANCE }}
+          # The sys_id below is the ID of your custom Global Application record
+        with:
+          app_sys_id: ${{ secrets.APP_SYS_ID }}
