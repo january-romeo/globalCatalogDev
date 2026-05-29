@@ -1,36 +1,31 @@
-name: Auto Create & Merge PR
+name: 1 - Auto Create and Merge PR
 
+# Trigger when code is pushed to ANY branch EXCEPT main
 on:
   push:
     branches-ignore:
-      - main                    # fires on any SN branch commit
+      - main
+  workflow_dispatch: # Allows you to run this manually if needed
+
+# Grant the background token permission to manipulate Pull Requests
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   create-and-merge-pr:
+    name: Auto-Merge ServiceNow Branch
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Create Pull Request
-        id: create_pr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref_name }}    # ← dynamically picks whatever branch SN pushed to
-          base: main
-          title: "Auto PR: ServiceNow changes from ${{ github.ref_name }}"
-          body: "Triggered by ServiceNow Studio commit — ${{ github.sha }}"
-
-      - name: Auto Merge PR
-        if: steps.create_pr.outputs.pull-request-number != ''
-        run: |
-          gh pr merge ${{ steps.create_pr.outputs.pull-request-number }} \
-            --auto --merge \
-            --repo ${{ github.repository }}
+      - name: Auto-Create and Auto-Merge PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Create the PR from your working branch into main
+          gh pr create --base main --head ${{ github.ref_name }} --title "Automated PR: ${{ github.ref_name }}" --body "This PR was automatically created and merged from the ServiceNow UI Action."
+          
+          # 2. Merge the PR and delete the temporary branch
+          gh pr merge ${{ github.ref_name }} --merge --delete-branch
