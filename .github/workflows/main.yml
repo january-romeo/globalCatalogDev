@@ -1,0 +1,45 @@
+# .github/workflows/auto-pr.yml
+
+name: Auto Create & Merge PR
+
+on:
+  push:
+    branches:
+      - dev          # triggers when ServiceNow commits to dev branch
+      - 'feature/**' # or any feature branch
+
+jobs:
+  create-and-merge-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Create Pull Request
+        id: create_pr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: dev               # source branch (SN commits here)
+          base: main                # target branch
+          title: "Auto PR: ServiceNow changes from dev"
+          body: |
+            ## Automated PR
+            - Triggered by ServiceNow Studio commit
+            - Branch: `dev` → `main`
+            - Commit: ${{ github.sha }}
+          labels: auto-merge
+
+      - name: Enable Auto Merge
+        if: steps.create_pr.outputs.pull-request-number != ''
+        run: |
+          gh pr merge ${{ steps.create_pr.outputs.pull-request-number }} \
+            --auto \
+            --merge \
+            --repo ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
