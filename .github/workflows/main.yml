@@ -1,4 +1,4 @@
-name: 1 - Auto Create and Merge PR
+name: Auto Create and Merge PR
 
 # Trigger when code is pushed to ANY branch EXCEPT main
 on:
@@ -19,13 +19,20 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches all history so origin/main is visible to Git
 
       - name: Auto-Create and Auto-Merge PR
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 1. Create the PR from your working branch into main
-          gh pr create --base main --head ${{ github.ref_name }} --title "Automated PR: ${{ github.ref_name }}" --body "This PR was automatically created and merged from the ServiceNow UI Action."
+          # 1. Create the PR and capture the URL dynamically using the triggering branch name
+          PR_URL=$(gh pr create --base main --head "${{ github.ref_name }}" --title "Automated PR: ${{ github.ref_name }}" --body "This PR was automatically created and merged from the ServiceNow UI Action.")
           
-          # 2. Merge the PR and delete the temporary branch
-          gh pr merge ${{ github.ref_name }} --merge --delete-branch
+          echo "Created PR: $PR_URL"
+          
+          # 2. Give GitHub a moment to register the new PR before trying to merge it
+          sleep 2
+
+          # 3. Merge the PR and delete the temporary branch
+          gh pr merge "$PR_URL" --merge --delete-branch
