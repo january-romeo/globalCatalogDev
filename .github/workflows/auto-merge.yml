@@ -1,0 +1,29 @@
+name: Auto Create and Merge PR
+
+# 1. Listen for pushes to ANY branch EXCEPT the main branch
+on:
+  push:
+    branches-ignore:
+      - main 
+
+# 2. Give the robot permission to edit code and PRs
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-and-merge-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Auto-Create and Auto-Merge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Step A: Use the GitHub CLI to automatically create the Pull Request
+          gh pr create --base main --head ${{ github.ref_name }} --title "Automated PR: ${{ github.ref_name }}" --body "This PR was automatically created and merged from ServiceNow."
+          
+          # Step B: Instantly merge that Pull Request into main
+          gh pr merge ${{ github.ref_name }} --merge --delete-branch
